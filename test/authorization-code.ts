@@ -269,4 +269,27 @@ describe('authorization-code', () => {
     });
 
   });
+  describe('Auto getting endpoints', () => {
+
+    it('should send requests to the discover endpoint', async () => {
+
+      const server = testServer();
+
+      const client = new OAuth2Client({
+        server: server.url,
+        clientId: 'test-client-id',
+      });
+      await client.receiveEndpoints();
+
+      expect(client.getEndpoint('tokenEndpoint')).to.equal('http://localhost:8080/testtoken');
+      expect(client.getEndpoint('authorizationEndpoint')).to.equal('http://localhost:8080/testauthorize');
+      expect(client.getEndpoint('userinfoEndpoint')).to.equal('http://localhost:8080/testuserinfo');
+      expect(client.getEndpoint('revocationEndpoint')).to.equal('http://localhost:8080/testrevoke');
+      expect(client.getEndpoint('endSessionEndpoint')).to.equal('http://localhost:8080/testendsession');
+      expect(client.getEndpoint('introspectionEndpoint')).to.equal('http://localhost:8080/testintrospect');
+
+    });
+
+
+  });
 });

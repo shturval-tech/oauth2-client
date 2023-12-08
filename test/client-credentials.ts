@@ -10,7 +10,6 @@ describe('client-credentials', () => {
 
     const client = new OAuth2Client({
       server: server.url,
-      tokenEndpoint: '/token',
       clientId: 'test-client-id',
       clientSecret: 'test-client-secret',
     });

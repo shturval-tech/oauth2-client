@@ -63,14 +63,8 @@ export class OAuth2AuthorizationCodeClient {
    */
   async getAuthorizeUri(params: GetAuthorizeUrlParams): Promise<string> {
 
-    const [
-      codeChallenge,
-      authorizationEndpoint
-    ] = await Promise.all([
-      params.codeVerifier ? getCodeChallenge(params.codeVerifier) : undefined,
-      this.client.getEndpoint('authorizationEndpoint')
-    ]);
-
+    const codeChallenge  = params.codeVerifier ? await getCodeChallenge(params.codeVerifier) : undefined
+    const authorizationEndpoint = this.client.getEndpoint('authorizationEndpoint')
     let query: AuthorizationQueryParams = {
       client_id: this.client.settings.clientId,
       response_type: 'code',

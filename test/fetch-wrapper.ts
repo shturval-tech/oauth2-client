@@ -7,7 +7,8 @@ describe('FetchWrapper', () => {
 
     const client = new OAuth2Client({
       clientId: 'foo',
-      clientSecret: 'bar'
+      clientSecret: 'bar',
+      server: 'http://example/',
     });
 
     const fetchWrapper = new OAuth2Fetch({
@@ -38,7 +39,8 @@ describe('FetchWrapper', () => {
 
     const client = new OAuth2Client({
       clientId: 'foo',
-      clientSecret: 'bar'
+      clientSecret: 'bar',
+      server: 'http://example/',
     });
 
     const fetchWrapper = new OAuth2Fetch({
@@ -70,7 +72,8 @@ describe('FetchWrapper', () => {
 
     const client = new OAuth2Client({
       clientId: 'foo',
-      clientSecret: 'bar'
+      clientSecret: 'bar',
+      server: 'http://example/',
     });
 
     const fetchWrapper = new OAuth2Fetch({
@@ -102,7 +105,8 @@ describe('FetchWrapper', () => {
 
     const client = new OAuth2Client({
       clientId: 'foo',
-      clientSecret: 'bar'
+      clientSecret: 'bar',
+      server: 'http://example/',
     });
 
     const fetchWrapper = new OAuth2Fetch({

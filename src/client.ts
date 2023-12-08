@@ -6,11 +6,30 @@ import {
   IntrospectionResponse,
   PasswordRequest,
   RefreshRequest,
-  ServerMetadataResponse,
   TokenResponse,
 } from './messages';
 import { OAuth2Error } from './error';
 import { OAuth2AuthorizationCodeClient } from './client/authorization-code';
+
+const ENDPOINTS = {
+  tokenEndpoint: 'token_endpoint',
+  authorizationEndpoint: 'authorization_endpoint',
+  userinfoEndpoint: 'userinfo_endpoint',
+  revocationEndpoint: 'revocation_endpoint',
+  endSessionEndpoint: 'end_session_endpoint',
+  introspectionEndpoint: 'introspection_endpoint',
+  discoveryEndpoint: 'discovery_endpoint',
+};
+
+const DEFAULT_LINKS = {
+  token_endpoint: '/token',
+  authorization_endpoint:  '/authorize',
+  userinfo_endpoint:  '/userinfo',
+  revocation_endpoint:  '/revoke',
+  end_session_endpoint:  '/endsession',
+  introspection_endpoint:  '/introspect',
+  discovery_endpoint:  '/.well-known/openid-configuration',
+};
 
 export interface ClientSettings {
 
@@ -62,15 +81,42 @@ export interface ClientSettings {
   introspectionEndpoint?: string;
 
   /**
-   * OAuth 2.0 Authorization Server Metadata endpoint or OpenID
+   * OpenID Authorization Server Metadata endpoint
    * Connect Discovery 1.0 endpoint.
    *
    * If this endpoint is provided it can be used to automatically figure
    * out all the other endpoints.
    *
-   * Usually the URL for this is: https://server/.well-known/oauth-authorization-server
+   * Usually the URL for this is: https://server/.well-known/openid-configuration
    */
   discoveryEndpoint?: string;
+
+  /**
+   * OpenID UserInfo Endpoint
+   *
+   * Protected Resource that returns Claims about the authenticated End-User
+   *
+   * Usually the URL for this is: https://server/userinfo
+   */
+  userinfoEndpoint?: string;
+
+  /**
+   * OAuth 2.0 Token Revocation Endpoint
+   *
+   * Revokes an obtained refresh or access token, plus all other tokens linked to the same authorisation grant.
+   *
+   * Usually the URL for this is: https://server/revoke
+   */
+  revocationEndpoint?: string;
+
+  /**
+   * OpenID Logout Endpoint
+   *
+   * URL at the OP to which an RP can perform a redirect to request that the End-User be logged out at the OP
+   *
+   * Usually the URL for this is: https://server/endsession
+   */
+  endSessionEndpoint?: string;
 
   /**
    * Fetch implementation to use.
@@ -92,18 +138,34 @@ export interface ClientSettings {
 }
 
 
-type OAuth2Endpoint = 'tokenEndpoint' | 'authorizationEndpoint' | 'discoveryEndpoint' | 'introspectionEndpoint';
+type OAuth2Endpoint =  keyof typeof ENDPOINTS;
+type OAuth2EndpointKey =  keyof typeof DEFAULT_LINKS;
 
 export class OAuth2Client {
 
   settings: ClientSettings;
 
   constructor(clientSettings: ClientSettings) {
+    if(!clientSettings.server) {
+      throw new Error(`Server is not specified.`);
+    }
+    const endpointKeys =  Object.keys(ENDPOINTS);
+    const defaultSettings = {};
+    for (const key of endpointKeys) {
+      const endpointKey = ENDPOINTS[key as OAuth2Endpoint] as OAuth2EndpointKey;
+      // @ts-ignore
+      defaultSettings[key as OAuth2Endpoint] = resolve( DEFAULT_LINKS[endpointKey] as string, clientSettings.server);
+      if( clientSettings[key as OAuth2Endpoint]) {
+        clientSettings[key as OAuth2Endpoint] = resolve(clientSettings[key as OAuth2Endpoint] as string, clientSettings.server);
+      }
+    }
+
 
     if (!clientSettings?.fetch) {
       clientSettings.fetch = fetch.bind(globalThis);
     }
-    this.settings = clientSettings;
+
+    this.settings = {...defaultSettings, ...clientSettings};
 
   }
 
@@ -198,88 +260,43 @@ export class OAuth2Client {
   }
 
   /**
-   * Returns a url for an OAuth2 endpoint.
+   * Returns a url for an OAuth2/OpenID endpoint.
    *
    * Potentially fetches a discovery document to get it.
    */
-  async getEndpoint(endpoint: OAuth2Endpoint): Promise<string> {
+  getEndpoint(endpoint: OAuth2Endpoint): string {
+    try {
 
-    if (this.settings[endpoint] !== undefined) {
-      return resolve(this.settings[endpoint] as string, this.settings.server);
-    }
-
-    if (endpoint !== 'discoveryEndpoint') {
-      // This condition prevents infinite loops.
-      await this.discover();
       if (this.settings[endpoint] !== undefined) {
-        return resolve(this.settings[endpoint] as string, this.settings.server);
+        return this.settings[endpoint] as string;
       }
+      throw new Error(`Could not determine the location of ${endpoint}.`);
+    }catch (e) {
+      console.error(e);
+      return '';
     }
-
-    // If we got here it means we need to 'guess' the endpoint.
-    if (!this.settings.server) {
-      throw new Error(`Could not determine the location of ${endpoint}. Either specify ${endpoint} in the settings, or the "server" endpoint to let the client discover it.`);
-    }
-
-    switch (endpoint) {
-      case 'authorizationEndpoint':
-        return resolve('/authorize', this.settings.server);
-      case 'tokenEndpoint':
-        return resolve('/token', this.settings.server);
-      case 'discoveryEndpoint':
-        return resolve('/.well-known/oauth-authorization-server', this.settings.server);
-      case 'introspectionEndpoint':
-        return resolve('/introspect', this.settings.server);
-    }
-
   }
 
-  private discoveryDone = false;
-  private serverMetadata: ServerMetadataResponse | null = null;
-
-
   /**
-   * Fetches the OAuth2 discovery document
+   * Fetches the OAuth2/OpenID discovery document
    */
-  private async discover(): Promise<void> {
-
-    // Never discover twice
-    if (this.discoveryDone) return;
-    this.discoveryDone = true;
-
-    let discoverUrl;
-    try {
-      discoverUrl = await this.getEndpoint('discoveryEndpoint');
-    } catch (err) {
-      console.warn('[oauth2] OAuth2 discovery endpoint could not be determined. Either specify the "server" or "discoveryEndpoint');
-      return;
-    }
-    const resp = await this.settings.fetch!(discoverUrl, { headers: { Accept: 'application/json' }});
-
+  async receiveEndpoints(): Promise<void> {
+    const resp = await this.settings.fetch!(this.settings.discoveryEndpoint!, { headers: { Accept: 'application/json' }});
     if (!resp.ok) return;
     if (!resp.headers.get('Content-Type')?.startsWith('application/json')) {
       console.warn('[oauth2] OAuth2 discovery endpoint was not a JSON response. Response is ignored');
       return;
     }
-    this.serverMetadata = await resp.json();
-
-    const urlMap = [
-      ['authorization_endpoint', 'authorizationEndpoint'],
-      ['token_endpoint', 'tokenEndpoint'],
-      ['introspection_endpoint', 'introspectionEndpoint'],
-    ] as const;
-
-    if (this.serverMetadata === null) return;
-
-    for (const [property, setting] of urlMap) {
-      if (!this.serverMetadata[property]) continue;
-      this.settings[setting] = resolve(this.serverMetadata[property]!, discoverUrl);
+    const serverMetadata = await resp.json();
+    for (const key in ENDPOINTS) {
+      const endpoint = ENDPOINTS[key as OAuth2Endpoint] as OAuth2EndpointKey;
+      if (!serverMetadata[endpoint]) continue;
+      this.settings[key as OAuth2Endpoint] = resolve(serverMetadata[endpoint]!, this.settings.server);
     }
 
-    if (this.serverMetadata.token_endpoint_auth_methods_supported && !this.settings.authenticationMethod) {
-      this.settings.authenticationMethod = this.serverMetadata.token_endpoint_auth_methods_supported[0];
+    if (serverMetadata.token_endpoint_auth_methods_supported && !this.settings.authenticationMethod) {
+      this.settings.authenticationMethod = serverMetadata.token_endpoint_auth_methods_supported[0];
     }
-
   }
 
   /**

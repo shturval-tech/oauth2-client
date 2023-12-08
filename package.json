@@ -1,31 +1,33 @@
 {
-  "name": "@badgateway/oauth2-client",
-  "version": "2.2.4",
-  "description": "OAuth2 client for browsers and Node.js. Tiny footprint, PKCE support",
+  "name": "@pmiroshin/oauth2-client",
+  "version": "0.0.1",
+  "description": "OAuth2 client for browsers and Node.js. Tiny footprint, PKCE and OpenID support",
   "main": "dist/index.js",
   "scripts": {
-    "test": "make test",
-    "prepublishOnly": "make build",
-    "lint": "make lint"
+    "test": "npx mocha",
+    "prepublishOnly": "webpack --mode=production",
+    "lint": "eslint --quiet 'src/**/*.ts' 'test/**/*.ts'"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/badgateway/oauth2-client.git"
+    "url": "git+ssh://git@github.com/PMiroshin/oauth2-client.git"
   },
   "keywords": [
     "fetch",
     "oauth2",
+    "openid",
+    "oidc",
     "pkce",
     "security",
     "bearer",
     "RFC6749"
   ],
-  "author": "Evert Pot (https://evertpot.com)",
+  "author": "Pavel Miroshin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/badgateway/oauth2-client/issues"
+    "url": "https://github.com/PMiroshin/oauth2-client/issues"
   },
-  "homepage": "https://github.com/badgateway/oauth2-client#readme",
+  "homepage": "https://github.com/PMiroshin/oauth2-client#readme",
   "engines": {
     "node": ">= 14"
   },
