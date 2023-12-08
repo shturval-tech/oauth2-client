@@ -18,7 +18,8 @@ This package contains an OAuth2 client with support OpenID
 ## Installation
 
 ```sh
-npm i @badgateway/oauth2-client
+npm i @pmiroshin/oauth2-client
+yarn add @pmiroshin/oauth2-client
 ```
 
 
@@ -28,7 +29,7 @@ To get started, set up the Client class.
 
 
 ```typescript
-import { OAuth2Client } from '@badgateway/oauth2-client';
+import { OAuth2Client } from '@pmiroshin/oauth2-client';
 
 const client = new OAuth2Client({
 
@@ -66,7 +67,7 @@ const client = new OAuth2Client({
   //
   // This document is used to determine various server features.
   // If not specified, we assume it's on /.well-known/oauth2-authorization-server
-  discoveryEndpoint: '/.well-known/oauth2-authorization-server',
+  discoveryEndpoint: '/.well-known/openid-configuration',
 
 });
 ```
