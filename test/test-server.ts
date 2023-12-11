@@ -28,6 +28,7 @@ export function testServer() {
   });
   app.use(issueToken);
   app.use(openIdConfig);
+  app.use(endSession);
   const port = 40000 + Math.round(Math.random()*9999);
   const server = app.listen(port);
 
@@ -90,4 +91,15 @@ const openIdConfig: Middleware = (ctx, next) => {
     introspection_endpoint: 'http://localhost:8080/testintrospect',
   };
 
+};
+
+
+const endSession: Middleware = (ctx, next) => {
+
+  if (ctx.path !== '/endsession') {
+    return next();
+  }
+
+  ctx.response.type = 'application/x-www-form-urlencoded';
+  ctx.response.status = 200;
 };

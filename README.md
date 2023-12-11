@@ -18,7 +18,8 @@ This package contains an OAuth2 client with support OpenID
 ## Installation
 
 ```sh
-npm i @pmiroshin/oauth2-client
+npm i @pmiroshin/oauth2-client 
+# or
 yarn add @pmiroshin/oauth2-client
 ```
 
@@ -392,6 +393,44 @@ const token = client.clientCredentials();
 
 // Introspect!
 console.log(client.introspect(token));
+```
+
+### Discover endpoints info
+
+Requests and injects endpoint configuration from discovery endpoint (/.well-known/openid-configuration)
+
+```typescript
+import { OAuth2Client } from '@badgateway/oauth2-client';
+
+const client = new Client({
+  server: 'https://auth-server.example/',
+  clientId: '...',
+});
+
+// Getting all endpoints from /.well-known/openid-configuration page
+await client.receiveEndpoints();
+
+```
+
+### Logout
+
+This method, in conjunction with the back and front-channel logout notification protocols, enables an OpenID provider together with participating applications to implement single logout.
+
+```typescript
+import { OAuth2Client } from '@badgateway/oauth2-client';
+
+const client = new Client({
+  server: 'https://auth-server.example/',
+  clientId: '...',
+});
+
+//...
+
+// Getting all endpoints from /.well-known/openid-configuration page
+await client.endSession();
+// or
+await client.endSession({ post_logout_redirect_uri: 'http://example/redirect' });
+
 ```
 
 

@@ -266,3 +266,13 @@ export type IntrospectionResponse = {
   jti?: string;
 
 }
+
+export type EndSessionRequest = {
+  id_token_hint?: OAuth2TokenTypeHint;
+  logout_hint?: string;
+  client_id?: string;
+  post_logout_redirect_uri?: string;
+  state?: string;
+  ui_locales?: string;
+};
+

@@ -2,6 +2,7 @@ import { OAuth2Token } from './token';
 import {
   AuthorizationCodeRequest,
   ClientCredentialsRequest,
+  EndSessionRequest,
   IntrospectionRequest,
   IntrospectionResponse,
   PasswordRequest,
@@ -130,7 +131,7 @@ export interface ClientSettings {
    * Client authentication method that is used to authenticate
    * when using the token endpoint.
    *
-   * Can be one of 'client_secret_basic' | 'client_secret_post'.
+   * Can be one of 'client_secret_basic' | 'client_secret_post' | 'client_bearer_header'.
    *
    * The default value is 'client_secret_basic' if not provided.
    */
@@ -242,6 +243,24 @@ export class OAuth2Client {
   }
 
   /**
+   * End session
+   *
+   * This method, in conjunction with the back and front-channel logout notification protocols,
+   * enables an OpenID provider together with participating applications to implement single logout.
+   *
+   * @see https://openid.net/specs/openid-connect-rpinitiated-1_0.html
+   */
+  async endSession(settings?: EndSessionRequest): Promise<void> {
+
+    const body: EndSessionRequest = {
+      client_id: this.settings.clientId,
+      ...(settings ?? {})
+    };
+    return this.request('endSessionEndpoint', body);
+
+  }
+
+  /**
    * Introspect a token
    *
    * This will give information about the validity, owner, which client
@@ -304,6 +323,7 @@ export class OAuth2Client {
    */
   async request(endpoint: 'tokenEndpoint', body: RefreshRequest | ClientCredentialsRequest | PasswordRequest | AuthorizationCodeRequest): Promise<TokenResponse>;
   async request(endpoint: 'introspectionEndpoint', body: IntrospectionRequest): Promise<IntrospectionResponse>;
+  async request(endpoint: 'endSessionEndpoint', body: EndSessionRequest): Promise<void>;
   async request(endpoint: OAuth2Endpoint, body: Record<string, any>): Promise<unknown> {
 
     const uri = await this.getEndpoint(endpoint);
@@ -349,7 +369,11 @@ export class OAuth2Client {
     });
 
     if (resp.ok) {
-      return await resp.json();
+      try {
+        return await resp.json();
+      } catch (e) {
+        return;
+      }
     }
 
     let jsonError;

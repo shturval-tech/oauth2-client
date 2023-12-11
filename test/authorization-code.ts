@@ -292,4 +292,50 @@ describe('authorization-code', () => {
 
 
   });
+
+  describe('Checking logout method', () => {
+
+    it('should send requests to the end session endpoint with default params', async () => {
+      const server = testServer();
+
+      const client = new OAuth2Client({
+        server: server.url,
+        clientId: 'test-client-id',
+      });
+      await client.endSession();
+
+      const request = server.lastRequest();
+      expect(request.body).to.eql({
+        client_id: 'test-client-id',
+      });
+
+    });
+  });
+
+  it('should send requests to the end session endpoint', async () => {
+    const server = testServer();
+
+    const client = new OAuth2Client({
+      server: server.url,
+      clientId: 'test-client-id',
+    });
+
+    await client.endSession({
+      client_id: 'not overridden',
+      logout_hint: 'logout_hint',
+      ui_locales: 'en-GB',
+      id_token_hint: 'access_token',
+      post_logout_redirect_uri: 'http://example/redirect',
+    });
+
+    const request = server.lastRequest();
+    expect(request.body).to.eql({
+      client_id: 'test-client-id',
+      logout_hint: 'logout_hint',
+      ui_locales: 'en-GB',
+      id_token_hint: 'access_token',
+      post_logout_redirect_uri: 'http://example/redirect',
+    });
+
+  });
 });
