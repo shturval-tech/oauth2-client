@@ -136,6 +136,12 @@ export interface ClientSettings {
    * The default value is 'client_secret_basic' if not provided.
    */
   authenticationMethod?: string;
+
+  /**
+   * The credentials read-only property of the Request interface indicates whether the user agent should send or receive cookies from the other domain in the case of cross-origin requests.
+   * https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials
+   */
+  credentials?: 'omit' | 'same-origin' | 'include';
 }
 
 
@@ -366,6 +372,7 @@ export class OAuth2Client {
       method: 'POST',
       body: generateQueryString(body),
       headers,
+      credentials: this.settings.credentials
     });
 
     if (resp.ok) {

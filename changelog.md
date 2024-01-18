@@ -1,7 +1,13 @@
 Changelog
 =========
 
-0.0.3
+0.0.4 (2024-01-18)
+------------------
+
+* Added "credentials" prop in settings
+
+
+0.0.3 (2023-12-11)
 ------------------
 
 * Added end session method

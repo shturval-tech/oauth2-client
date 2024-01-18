@@ -1,6 +1,6 @@
 {
   "name": "@pmiroshin/oauth2-client",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "OAuth2 client for browsers and Node.js. Tiny footprint, PKCE and OpenID support",
   "main": "dist/index.js",
   "scripts": {
