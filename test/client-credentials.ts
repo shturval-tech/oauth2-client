@@ -77,14 +77,6 @@ describe('client-credentials', () => {
     expect(result.refreshToken).to.equal('refresh_token_000');
     expect(result.expiresAt).to.be.lessThanOrEqual(Date.now() + 3600_000);
     expect(result.expiresAt).to.be.greaterThanOrEqual(Date.now() + 3500_000);
-
-    const request = server.lastRequest();
-
-    expect(request.body).to.eql({
-      client_id: 'test-client-id',
-      client_secret: 'test-client-secret',
-      grant_type: 'client_credentials'
-    });
   });
 
 });

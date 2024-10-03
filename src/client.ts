@@ -138,6 +138,16 @@ export interface ClientSettings {
   authenticationMethod?: string;
 
   /**
+   * Client authentication methods used to authenticate
+   * when using the token endpoint.
+   *
+   * Can be set of 'client_secret_basic' | 'client_secret_post' | 'client_bearer_header'.
+   *
+   * The default value is 'client_secret_basic' if not provided.
+   */
+    authenticationMethods?: string[];
+
+  /**
    * The credentials read-only property of the Request interface indicates whether the user agent should send or receive cookies from the other domain in the case of cross-origin requests.
    * https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials
    */
@@ -319,8 +329,8 @@ export class OAuth2Client {
       this.settings[key as OAuth2Endpoint] = resolve(serverMetadata[endpoint]!, this.settings.server);
     }
 
-    if (serverMetadata.token_endpoint_auth_methods_supported && !this.settings.authenticationMethod) {
-      this.settings.authenticationMethod = serverMetadata.token_endpoint_auth_methods_supported[0];
+    if (serverMetadata.token_endpoint_auth_methods_supported && !this.settings.authenticationMethods?.length) {
+      this.settings.authenticationMethods = serverMetadata.token_endpoint_auth_methods_supported;
     }
   }
 
@@ -339,33 +349,46 @@ export class OAuth2Client {
     };
 
     let authMethod = this.settings.authenticationMethod;
+    const authMethods = new Set(this.settings.authenticationMethods);
+
+    // If oidc provider not defined any methods, use client_secret_basic.
+    // If methods defined, select method in order:
+    //  1.Client_secret_post
+    //  2.Client_secret_basic
+    // If provider doesn't support one of these methods, throw Error with auth method
 
     if (!this.settings.clientSecret) {
       // Basic auth should only be used when there's a client_secret, for
       // non-confidential clients we may only have a client_id, which
       // always gets added to the body.
-      authMethod = 'client_secret_post';
+      authMethods.add('client_secret_post')
     }
+
     if (!authMethod) {
+      authMethod = 'client_secret_basic';
+      authMethods.add(authMethod)
+    }
+
+   
+    if (authMethods?.size == 0) {
       // If we got here, it means no preference was provided by anything,
       // and we have a secret. In this case its preferred to embed
       // authentication in the Authorization header.
-      authMethod = 'client_secret_basic';
-    }
-
-    switch(authMethod) {
-      case 'client_secret_basic' :
-        headers.Authorization = 'Basic ' +
-          btoa(this.settings.clientId + ':' + this.settings.clientSecret);
-        break;
-      case 'client_secret_post' :
-        body.client_id = this.settings.clientId;
-        if (this.settings.clientSecret) {
-          body.client_secret = this.settings.clientSecret;
-        }
-        break;
-      default:
-        throw new Error('Authentication method not yet supported:' + authMethod + '. Open a feature request if you want this!');
+      headers.Authorization = 'Basic ' +
+        btoa(this.settings.clientId + ':' + this.settings.clientSecret);
+    } else if(authMethods?.has('client_secret_post')) {
+      body.client_id = this.settings.clientId;
+      if (this.settings.clientSecret) {
+        body.client_secret = this.settings.clientSecret;
+      }
+    } else if (authMethods?.has('client_secret_basic')) {
+      headers.Authorization = 'Basic ' +
+        btoa(this.settings.clientId + ':' + this.settings.clientSecret);
+    } else {
+      // If provider doesn't support one of these methods, throw Error with auth method
+      const errorMessage = 'Authentication method not yet supported:' + authMethod + '. Open a feature request if you want this!';
+      console.error(errorMessage)
+      throw new Error(errorMessage)
     }
 
     const resp = await this.settings.fetch!(uri, {
