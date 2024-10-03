@@ -18,9 +18,9 @@ This package contains an OAuth2 client with support OpenID
 ## Installation
 
 ```sh
-npm i @pmiroshin/oauth2-client 
+npm i @shturval-tech/oauth2-client 
 # or
-yarn add @pmiroshin/oauth2-client
+yarn add @shturval-tech/oauth2-client
 ```
 
 
@@ -30,7 +30,7 @@ To get started, set up the Client class.
 
 
 ```typescript
-import { OAuth2Client } from '@pmiroshin/oauth2-client';
+import { OAuth2Client } from '@shturval-tech/oauth2-client';
 
 const client = new OAuth2Client({
 

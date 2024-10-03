@@ -1,5 +1,5 @@
 {
-  "name": "@pmiroshin/oauth2-client",
+  "name": "@shturval-tech/oauth2-client",
   "version": "0.0.4",
   "description": "OAuth2 client for browsers and Node.js. Tiny footprint, PKCE and OpenID support",
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/PMiroshin/oauth2-client.git"
+    "url": "git+ssh://git@github.com:shturval-tech/oauth2-client.git"
   },
   "keywords": [
     "fetch",
@@ -22,12 +22,12 @@
     "bearer",
     "RFC6749"
   ],
-  "author": "Pavel Miroshin",
+  "author": "Anton Poludnitsin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/PMiroshin/oauth2-client/issues"
+    "url": "https://github.com/shturval-tech/oauth2-client/issues"
   },
-  "homepage": "https://github.com/PMiroshin/oauth2-client#readme",
+  "homepage": "https://github.com/shturval-tech/oauth2-client#readme",
   "engines": {
     "node": ">= 14"
   },
